@@ -2,7 +2,7 @@
 
 > **Metadata**
 > - last-updated-by: update-ai-system
-> - last-verified-against-code: 2026-07-22
+> - last-verified-against-code: 2026-07-29
 > - staleness-policy: re-verify before trusting if any architecture-affecting commits have been made since last-verified-against-code
 
 > **Overview:** How the system is structured — layers, modules, data flow, and configuration. Agents designing or changing structure must read this first.
@@ -45,7 +45,7 @@ Meta Cloud API Webhook
 | packages/meta-api | Typed Meta WhatsApp Cloud REST API wrapper | packages/meta-api/src/index.ts | none (fetch-based) |
 | packages/schemas | Workflow JSON schema + validators | packages/schemas/src | ajv, zod |
 | packages/utils | Shared types and helpers | packages/utils/src | none |
-| infrastructure | Dockerfiles and compose | infrastructure/ | none |
+| (root) | Docker Compose (postgres + redis + api + dashboard) + API Dockerfile | docker-compose.yml, Dockerfile | none |
 | configs | Example workflows and tenant configs | configs/ | none |
 | scripts | DB seed scripts | scripts/ | TypeORM |
 
@@ -118,7 +118,7 @@ All config points must follow the fallback discipline from `standards/engineerin
 
 | Layer | Technology | Version |
 |-------|-----------|---------|
-| Frontend | Next.js + React | 15 / 19 |
+| Frontend | Next.js + React | 15 / 18.3 |
 | Backend | NestJS + Fastify | 10 |
 | Database | PostgreSQL | 16 |
 | Cache/Queue | Redis + BullMQ | 7 |
@@ -140,8 +140,11 @@ All config points must follow the fallback discipline from `standards/engineerin
 - `import type` breaks NestJS DI — must use `import { Cls, type SomeType }` pattern
 - Fastify 4 plugin compat: pin `@fastify/*` plugins to Fastify 4-compatible majors
 - Meta webhook raw body must be captured via Fastify `preParsing` hook for HMAC signature validation
-- apps/api/Dockerfile fixed — removed stale worker reference, corrected port to 8080
+- Dockerfile fixed — removed stale worker COPY, added lockfile to config copy, added workspace node_modules copy for nested deps
+- apps/dashboard/Dockerfile fixed — per-package COPY strategy, CMD path, removed missing public dir
+- React pinned to 18.3.1 (Next.js 15.1+ peer-dep issue with npm 11)
 - `@radix-ui/react-badge` npm install fail — dashboard dependency not in registry, not blocking build
+- Transitive deps of nested packages (@fastify/multipart, @fastify/rate-limit) must be in root package.json or root node_modules for Docker resolution
 
 ---
 

@@ -3,7 +3,7 @@
 > **Metadata**
 >
 > - last-updated-by: update-ai-system
-> - last-verified-against-code: 2026-07-22
+> - last-verified-against-code: 2026-07-29
 > - staleness-policy: auto-regenerable — can be derived from `Get-ChildItem -Recurse` or `tree` command. Manual content only where intent cannot be derived from structure.
 
 > **Overview:** Visual map of the project folder structure with purpose descriptions. Updated when the folder structure changes. This file is **auto-regenerable** — use tool-based discovery (filesystem MCP, git ls-tree) for ground truth, and treat manual entries here as supplementary context, not primary navigation.
@@ -22,10 +22,12 @@ convorchestrate/
 |   |-- meta-api/     -> Typed Meta WhatsApp Cloud API wrapper (NEW)
 |   |-- schemas/      -> Workflow JSON schema + validators
 |   `-- utils/        -> Shared types and helpers
-|-- infrastructure/   -> Docker compose (postgres + api + dashboard)
 |-- configs/          -> Workflow and tenant config samples
 |-- scripts/          -> Seed scripts and tooling
 |-- ai-system/       -> AI development system
+|-- docker-compose.yml  -> Docker Compose (postgres + redis + api + dashboard)
+|-- Dockerfile          -> API Dockerfile
+|-- .dockerignore
 `-- package.json
 ```
 
@@ -43,7 +45,8 @@ convorchestrate/
 | packages/meta-api| Typed Meta WhatsApp Cloud REST API wrapper                          | packages/meta-api/src             |
 | packages/schemas | Workflow JSON schema + validators                                  | packages/schemas/src              |
 | packages/utils   | Shared helpers                                                     | packages/utils/src                |
-| infrastructure   | Docker compose (postgres + api + dashboard)                        | infrastructure/docker-compose.yml |
+| (root)           | Docker Compose (postgres + redis + api + dashboard)                  | docker-compose.yml                |
+| (root)           | API Dockerfile                                                        | Dockerfile                        |
 | configs          | Sample workflow configs                                            | configs/workflows                 |
 | scripts          | Seed and tooling                                                   | scripts/seed.ts                   |
 
@@ -61,7 +64,6 @@ apps/api/src/modules/
 ├── groups/          Contact group CRUD + CSV import (wa-manager model)
 ├── health/          Health check (DB connectivity)
 ├── mediations/      Mediation session CRUD (list, get, close) (with DB connectivity)
-├── mediations/      Mediation session CRUD (list, get, close)
 ├── media/           Media upload and storage
 ├── messaging/       Messaging service (incoming webhook → workflow queue)
 ├── queue/           BullMQ queue service (workflow-execution, delayed-message, webhook-trigger, campaign-launch)

@@ -3,7 +3,7 @@
 > **Metadata**
 >
 > - last-updated-by: update-ai-system
-> - last-verified-against-code: 2026-07-22
+> - last-verified-against-code: 2026-07-29
 > - staleness-policy: re-verify if project scope or phase changes
 
 > **Overview:** High-level feature checklist organized by development phase. See `planning/task-queue.md` for granular, sprint-level tasks.
@@ -29,7 +29,7 @@ The original convorchestrate build used `whatsapp-web.js` (Puppeteer-based, frag
 - [x] Adopt wa-manager's Docker Compose as new baseline
 - [x] Set up Meta Cloud API credential flow (env vars, validation, fail-fast)
 - [x] Prime .env.example with wa-manager vars + convorchestrate extras
-- [ ] Verify: `docker compose up` boots postgres + frontend
+- [x] Verify: `docker compose up` boots all services (postgres + redis + api + dashboard)
 
 ---
 
@@ -135,3 +135,15 @@ The original convorchestrate build used `whatsapp-web.js` (Puppeteer-based, frag
 - [x] Write deployment guide — included in SETUP.md + docker-compose verified
 - [x] Update README with project description + attribution to [wa-manager](https://github.com/godopetza/wa-manager)
 - [x] Verify: full deployment pipeline works — Dockerfiles fixed, docker-compose updated (added Redis)
+
+---
+
+## Phase R10 — Docker Build & Runtime Fixes ✓
+
+- [x] Fix Dockerfile — removed stale worker COPY, added package-lock.json to config copy
+- [x] Fix Dockerfile — added workspace node_modules copy for nested transitive deps resolution
+- [x] Fix apps/dashboard/Dockerfile — explicit per-package COPY, fixed CMD path, removed missing public dir
+- [x] Fix React 19 → 18.3.1 downgrade for npm 11 peer-dep compatibility
+- [x] Install missing transitive deps (@fastify/busboy, @lukeed/ms, stream-wormhole) in root package.json
+- [x] Add Meta env vars with defaults to docker-compose.yml api service
+- [x] Verify: docker compose up — all 4 services (postgres, redis, api, dashboard) start and stay healthy

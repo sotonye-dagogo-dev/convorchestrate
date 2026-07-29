@@ -3,7 +3,7 @@
 > **Metadata**
 >
 > - last-updated-by: update-ai-system
-> - last-verified-against-code: 2026-07-22
+> - last-verified-against-code: 2026-07-29
 > - staleness-policy: historical entries do not go stale
 
 > **Overview:** Chronological log of completed development work. Each sprint ends with a summary entry. Agents add entries after completing tasks. Useful for understanding what has been built, when decisions were made, and what patterns have emerged.
@@ -327,7 +327,7 @@ Completed the final project phase. Updated README.md with project description, a
 **Next Sprint Focus:**
 All phases complete. Project is ready for production deployment and maintenance.
 
-## 2026-07-22 — R10 ai-system Update & GitHub Workflows
+## 2026-07-29 — R10 ai-system Update & GitHub Workflows
 
 **Summary:**
 Installed opencode GitHub Actions workflow from the default-template repository. Ran update-ai-system to synchronize freshness metadata across all ai-system files. Added MIGRATION.md for future v1→v2 upgrade reference. Updated .gitignore with ai-system entries. Verified current ai-system is already v2 — no outdated .ai-system found.
@@ -336,7 +336,7 @@ Installed opencode GitHub Actions workflow from the default-template repository.
 - Created .github/workflows/opencode.yml — opencode local trigger (design + dev pipelines)
 - Created MIGRATION.md — v1→v2 migration guide for future reference
 - Updated .gitignore with config.yaml, .stdout, .continue, ai-system-v1-backup/
-- Updated freshness metadata across all ai-system files to 2026-07-22
+- Updated freshness metadata across all ai-system files to 2026-07-29
 - Updated session-log and dev-history with this entry
 
 **Key Changes:**
@@ -345,6 +345,27 @@ Installed opencode GitHub Actions workflow from the default-template repository.
 
 **Next Sprint Focus:**
 All phases complete. Project is ready for production deployment and maintenance.
+
+## 2026-07-29 — R10 Docker Build & Runtime Fixes
+
+**Summary:**
+All 4 Docker Compose services (postgres, redis, api, dashboard) are now building and running. Fixed root Dockerfile (worker ref removed, lockfile added, workspace node_modules copy for nested transitive deps), apps/dashboard/Dockerfile (per-package COPY strategy, fixed CMD path), and the React 18/19 version conflict. Added missing transitive dependencies as root deps. Added Meta env vars to docker-compose.yml. Ran update-ai-system for drift sync.
+
+**Completed:**
+- Fixed root `Dockerfile` — removed stale worker COPY, added package-lock.json, added workspace node_modules copy step
+- Fixed `apps/dashboard/Dockerfile` — changed to explicit per-package COPY (prevents Turbo workspace dup error), fixed CMD from `server.js` to `apps/dashboard/server.js`, removed copy of non-existent `public/` dir
+- Downgraded React 19→18.3.1, pinned `@types/react` 18.3.12 to resolve npm 11 peer-dep conflict
+- Installed `@lukeed/ms`, `stream-wormhole`, `@fastify/busboy` as explicit root deps (npm workspace lockfile issue with nested transitive deps)
+- Added Meta env vars (`META_PHONE_NUMBER_ID`, `META_ACCESS_TOKEN`, `META_APP_SECRET`, etc.) with defaults in docker-compose.yml
+- Verified all 4 services start and are healthy
+
+**Key Changes:**
+- Docker images now include workspace-level `apps/api/node_modules` with nested transitive deps for @fastify/multipart and @fastify/rate-limit
+- React version pinned to 18.3.1 across the dashboard workspace
+- Transitive deps of nested packages must be hoisted via root package.json or copied explicitly into the Docker image
+
+**Next Sprint Focus:**
+Configure real Meta credentials, verify end-to-end message flow, and resolve remaining unchecked items in R6-R8.
 
 ## 2026-07-08 — R4 Multi-Tenant Isolation
 

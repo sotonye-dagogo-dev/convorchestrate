@@ -25,7 +25,7 @@ cp .env.example .env
 3. Start PostgreSQL and Redis (via Docker Compose or local install):
 
 ```bash
-docker compose -f infrastructure/docker-compose.yml up postgres -d
+docker compose up postgres -d
 ```
 
 4. Run database migrations:
@@ -78,7 +78,7 @@ npm test --workspace=packages/meta-api
 To run everything (API + dashboard + database) in Docker:
 
 ```bash
-docker compose -f infrastructure/docker-compose.yml up --build
+docker compose up --build
 ```
 
-This starts PostgreSQL, the NestJS API (port 8080), and the Next.js dashboard (port 3000).
+This starts PostgreSQL, Redis, the NestJS API (port 3000), and the Next.js dashboard (port 5173).

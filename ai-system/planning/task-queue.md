@@ -3,7 +3,7 @@
 > **Metadata**
 >
 > - last-updated-by: update-ai-system
-> - last-verified-against-code: 2026-07-22
+> - last-verified-against-code: 2026-07-29
 > - staleness-policy: re-verify before each session
 
 > **Overview:** Sprint-level task queue with complexity tagging. Agents execute tasks top to bottom within the current sprint. Each task is sized so it can be completed in a single session.
@@ -37,7 +37,8 @@ convorchestrate/
 │   ├── meta-api/         → Meta WhatsApp Cloud API wrapper
 │   ├── schemas/          → Workflow JSON schema, validators
 │   └── utils/            → Shared types and helpers
-├── infrastructure/       → Docker compose (postgres + api + dashboard)
+├── docker-compose.yml    → Docker Compose (postgres + redis + api + dashboard)
+├── Dockerfile             → API multi-stage build
 ├── configs/              → Workflow config samples, tenant configs
 ├── scripts/              → Seed scripts
 └── ai-system/           → AI development system
@@ -47,19 +48,20 @@ convorchestrate/
 
 ---
 
-## Current Sprint — R3 Campaign Engine Port
+## Current Sprint — R10 Docker Build & Runtime Fixes
 
 | Size | Task                                   | Status |
 | ---- | -------------------------------------- | ------ |
 | [XL] | R1: Foundation Reset & Integration     | [x]    |
 | [XL] | R2: NestJS Backend with Meta Cloud API | [x]    |
 | [XL] | R3: Campaign Engine (NestJS Port)      | [x]    |
-| [XL] | R4: Multi-Tenant Isolation             | [~]    |
+| [XL] | R4: Multi-Tenant Isolation             | [x]    |
 | [XL] | R5: Config-Driven Workflow Integration | [x]    |
-| [L]  | R6: Advanced Campaign Features         | [x]    |
-| [L]  | R7: Mediation Workflows                | [x]    |
-| [M]  | R8: Hardening & Polish                 | [x]    |
+| [L]  | R6: Advanced Campaign Features         | [~]    |
+| [L]  | R7: Mediation Workflows                | [~]    |
+| [M]  | R8: Hardening & Polish                 | [~]    |
 | [M]  | R9: Documentation & Deployment         | [x]    |
+| [M]  | R10: Docker Build & Runtime Fixes      | [x]    |
 
 ---
 

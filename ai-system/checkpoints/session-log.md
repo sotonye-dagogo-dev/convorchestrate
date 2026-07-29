@@ -3,7 +3,7 @@
 > **Metadata**
 >
 > - last-updated-by: update-ai-system
-> - last-verified-against-code: 2026-07-22
+> - last-verified-against-code: 2026-07-29
 > - staleness-policy: append-only — never modify past entries
 
 > **Overview:** Append-only running log of development sessions. Each entry records what was completed, what comes next, and which files were modified. Agents write here at the end of every session so work can be resumed without re-reading the entire codebase. This file is the **append-only historical record** — use `checkpoints/in-progress.md` for current in-progress work.
@@ -359,7 +359,55 @@ R5 — Config-Driven Workflow Integration. Port workflow JSON schema, create pac
 - 51/51 tests pass (19 meta-api + 13 core + 19 api)
 - R4 complete except tenant-scoped MetaApiClient wiring (deferred to hardening phase)
 
-## Session 16 — 2026-07-22
+## Session 18 — 2026-07-29
+
+**Completed:**
+Drift cleanup — deleted stale `infrastructure/` directory. The old `infrastructure/docker-compose.yml` referenced `apps/api/Dockerfile` which no longer exists (API Dockerfile moved to root during R1). Updated SETUP.md, README.md, and task-queue.md to point to the root docker-compose.yml. Logged in repair-system.md and project-decisions.md.
+
+**Files Modified:**
+- infrastructure/docker-compose.yml — deleted
+- infrastructure/ (directory) — deleted
+- SETUP.md — replaced `docker compose -f infrastructure/docker-compose.yml` with `docker compose`
+- README.md — replaced `infrastructure/` layout entry with root `docker-compose.yml`; fixed React 19→18.3
+- ai-system/planning/task-queue.md — replaced `infrastructure/` with `docker-compose.yml` + `Dockerfile`
+- ai-system/repair-system.md — added infrastructure cleanup entry
+- ai-system/memory/project-decisions.md — added infrastructure deletion decision
+- ai-system/checkpoints/in-progress.md — updated status
+
+**Next Task:**
+Configure real Meta credentials, verify end-to-end message flow, resolve remaining unchecked R6-R8 items.
+
+**Assumptions Made:**
+- No code or tooling depends on `infrastructure/docker-compose.yml` — verified via grep, only SETUP.md and README.md referenced it
+
+**Notes / Blockers:**
+- The `dev-history.md` and earlier `session-log.md` entries that mention `infrastructure/docker-compose.yml` are historical records and were left untouched (append-only)
+
+## Session 17 — 2026-07-29
+
+**Completed:**
+R10 — Docker Build & Runtime Fixes. Fixed all Docker build and runtime issues in the full stack (postgres, redis, api, dashboard). All 4 services now start and stay healthy in Docker Compose. Ran update-ai-system for drift sync.
+
+**Files Modified:**
+- docker-compose.yml — added Meta env vars with defaults
+- Dockerfile — removed stale worker COPY, added lockfile, added workspace node_modules copy for nested transitive deps
+- apps/dashboard/Dockerfile — per-package COPY strategy, fixed CMD path, removed missing public dir
+- apps/dashboard/package.json — react/react-dom pinned to 18.3.1, types pinned to exact 18.x
+- package.json — added @fastify/busboy, @lukeed/ms, stream-wormhole as root dependencies
+- ai-system/ (entire directory) — freshness metadata updated, new entries added across 8 files
+
+**Next Task:**
+Configure real Meta credentials, verify end-to-end message flow, resolve remaining unchecked R6-R8 items.
+
+**Assumptions Made:**
+- Placeholder Meta credentials ("set-me-in-env") are sufficient for API boot; real credentials needed for message sending
+
+**Notes / Blockers:**
+- Nested transitive deps (stream-wormhole, @lukeed/ms, @fastify/busboy) must stay in root package.json as long as @fastify/multipart and @fastify/rate-limit are nested in apps/api/node_modules/
+- Docker COPY does not support glob expansion in destination paths — use explicit per-package COPY lines
+- React/React-DOM must stay pinned to 18.x until all peer deps in the tree are updated for 19
+
+## Session 16 — 2026-07-29
 
 **Completed:**
 R10 — ai-system update and GitHub workflows setup. Installed opencode GitHub Action workflow from default-template. Ran update-ai-system to sync freshness metadata. Added MIGRATION.md for future v1→v2 migration reference. All R1-R9 phases remain fully complete.
@@ -368,7 +416,7 @@ R10 — ai-system update and GitHub workflows setup. Installed opencode GitHub A
 - .github/workflows/opencode.yml — (NEW) opencode local trigger workflow
 - MIGRATION.md — (NEW) v1→v2 migration guide
 - .gitignore — added ai-system entries
-- ai-system/ (entire directory) — freshness metadata updated to 2026-07-22
+- ai-system/ (entire directory) — freshness metadata updated to 2026-07-29
 
 **Next Task:**
 All phases complete. Project is ready for production deployment and maintenance.

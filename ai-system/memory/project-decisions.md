@@ -182,3 +182,22 @@ When creating a mediation session, Party B (the respondent) may not be known at 
 **Implications:**
 - Migration alters `mediation_sessions` to make `party_b_contact_id` nullable
 - Engine's `resolveMediationParty()` must handle the case where `partyBContactId` is null
+
+## Delete Stale infrastructure/ Directory
+
+**Decision:** Delete the `infrastructure/` directory and its stale `docker-compose.yml` — the active compose file is now at the project root.
+**Date:** 2026-07-29
+**Made by:** fix-build drift resolution
+**Supersedes:** None
+**Superseded by:** None
+
+**Reason:**
+During the wa-manager rebase (R1), the docker-compose.yml was moved from `infrastructure/` to the project root, and the API Dockerfile was moved from `apps/api/Dockerfile` to the root `Dockerfile`. The stale copy at `infrastructure/docker-compose.yml` still references `apps/api/Dockerfile` (which no longer exists), would fail on build, and is misleading for developers.
+
+**Alternatives Considered:**
+- Update it to reflect current paths (rejected — it's a stale duplicate, having two compose files causes confusion)
+- Keep it as a reference (rejected — SETUP.md and README.md were already pointing to the root compose via GitHub file lists)
+
+**Implications:**
+- Developers must use `docker compose up` from the project root instead of `docker compose -f infrastructure/docker-compose.yml`
+- SETUP.md and README.md updated to reflect root-level docker-compose.yml

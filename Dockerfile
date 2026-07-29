@@ -1,11 +1,13 @@
 FROM node:20-alpine AS builder
 RUN apk add --no-cache python3 make g++
 WORKDIR /app
-COPY package.json turbo.json tsconfig.base.json ./
+COPY package.json package-lock.json turbo.json tsconfig.base.json ./
 COPY apps/api/package.json apps/api/package.json
-COPY apps/worker/package.json apps/worker/package.json
-COPY packages/*/package.json packages/*/package.json
-RUN npm ci
+COPY packages/core/package.json packages/core/package.json
+COPY packages/meta-api/package.json packages/meta-api/package.json
+COPY packages/schemas/package.json packages/schemas/package.json
+COPY packages/utils/package.json packages/utils/package.json
+RUN npm install
 COPY . .
 RUN npx turbo run build --filter=api...
 
@@ -16,6 +18,7 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=builder --chown=appuser:nodejs /app/apps/api/dist ./apps/api/dist
 COPY --from=builder --chown=appuser:nodejs /app/apps/api/package.json ./apps/api/package.json
 COPY --from=builder --chown=appuser:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=appuser:nodejs /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=builder --chown=appuser:nodejs /app/packages ./packages
 USER appuser
 EXPOSE 3000

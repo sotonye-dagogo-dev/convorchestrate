@@ -8,7 +8,7 @@ Built on top of the open-source [wa-manager](https://github.com/godopetza/wa-man
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js 15 + React 19 |
+| Frontend | Next.js 15 + React 18.3 |
 | Backend | NestJS 10 + Fastify |
 | Database | PostgreSQL 16 (TypeORM) |
 | Queue | Redis + BullMQ |
@@ -25,7 +25,7 @@ packages/
   meta-api/     Typed Meta WhatsApp Cloud API wrapper
   schemas/      Workflow JSON schema + validators
   utils/        Shared helpers
-infrastructure/ Docker Compose (postgres + api + dashboard)
+(root)          Docker Compose (postgres + redis + api + dashboard)
 scripts/        Database seed scripts
 ```
 

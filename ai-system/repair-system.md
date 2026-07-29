@@ -2,7 +2,7 @@
 
 > **Metadata**
 > - last-updated-by: update-ai-system
-> - last-verified-against-code: 2026-07-22
+> - last-verified-against-code: 2026-07-29
 > - staleness-policy: individual entries may be stale if the code has changed around them — verify fix still applies before reusing
 
 > **Overview:** Living knowledge base of errors encountered during development, their root causes, and how they were fixed. Agents must search this before diagnosing new errors and log every fixed bug to prevent recurrence.
@@ -128,6 +128,163 @@ When using try/catch for flow control, ensure the catch block re-throws known er
 - packages/meta-api/src/meta-api.client.ts
 
 **Date:** 2026-07-01
+**Status:** Active
+
+### Nested Workspace Transitive Deps Missing at Docker Runtime
+
+**Symptom:**
+API container crashes at startup with:
+```
+Error: Cannot find module '@lukeed/ms'
+Require stack:
+- /app/apps/api/node_modules/@fastify/rate-limit/index.js
+```
+Or:
+```
+Error: Cannot find module '@fastify/multipart'
+Require stack:
+- /app/apps/api/dist/main.js
+```
+
+**Root Cause:**
+`@fastify/multipart@8.3.1` and `@fastify/rate-limit@9.1.0` are installed in `apps/api/node_modules/` (nested). Their transitive deps (`@fastify/busboy`, `@lukeed/ms`, `stream-wormhole`, `@fastify/deepmerge`, `@fastify/error`) are either nested inside `apps/api/node_modules/@fastify/multipart/` or not hoisted to the resolution path. The Docker runner stage only copied root `node_modules/`, not workspace nested ones.
+
+**Fix Applied:**
+1. Added missing transitive deps to root `package.json` under `dependencies`:
+   - `@fastify/busboy@^3.2.0`
+   - `@lukeed/ms@^2.0.2`
+   - `stream-wormhole@^2.0.1`
+2. Added `COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules` to the Dockerfile runner stage
+
+**Prevention:**
+When using npm workspaces with multi-stage Docker builds, explicitly copy workspace-level node_modules directories and hoist any transitive deps that are version-locked to specific ranges.
+
+**Files Affected:**
+- Dockerfile — added COPY for apps/api/node_modules
+- package.json — added @fastify/busboy, @lukeed/ms, stream-wormhole as root deps
+- docker-compose.yml — added Meta env vars
+
+**Date:** 2026-07-29
+**Status:** Active
+
+### Dashboard Build Fails — React 18/19 Version Conflict
+
+**Symptom:**
+Dashboard build produces React "Invalid hook call" errors at runtime, or `Module not found: Can't resolve 'react'` during build.
+
+**Root Cause:**
+npm 11 resolves the `react@^18.2.0 || ^19.0.0` peer dependency range from `@radix-ui/*` and Next.js 15 by installing both React 18 and 19 into different parts of the node_modules tree. The workspace symlinked `react` resolves to the root's React 19, while some packages resolve their own copy of React 18.
+
+**Fix Applied:**
+Downgraded `react` from `19.0.0` to `18.3.1` and `react-dom` to the same in `apps/dashboard/package.json`. Pinned `@types/react` and `@types/react-dom` to matching 18.x versions. Did a clean install (deleted lockfile + node_modules).
+
+**Prevention:**
+Pin React to a single major version (18.x) when using npm 11 with packages that declare `^18.2.0 || ^19.0.0` peer deps. Avoid letting npm resolve both majors.
+
+**Files Affected:**
+- apps/dashboard/package.json — react/react-dom pinned to 18.3.1, types pinned to exact 18.x
+
+**Date:** 2026-07-29
+**Status:** Active
+
+### Dashboard Dockerfile — Turbo Workspace Duplication Error
+
+**Symptom:**
+Dashboard Docker build fails during `npm install` stage with:
+```
+npm ERR! Invalid workspace configuration: package "convorchestrate" has workspace "apps/*"...
+Duplicate workspace "packages/*" found
+```
+
+**Root Cause:**
+The Dockerfile used `COPY packages/*/package.json packages/*/package.json` which is not a valid glob pattern for the COPY instruction in Docker. It copies all package.json files to the `packages/*/package.json` path, creating overlapping directory structures.
+
+**Fix Applied:**
+Changed to explicit per-package COPY lines (similar to what the root Dockerfile does):
+```
+COPY packages/core/package.json packages/core/package.json
+COPY packages/meta-api/package.json packages/meta-api/package.json
+COPY packages/schemas/package.json packages/schemas/package.json
+COPY packages/utils/package.json packages/utils/package.json
+```
+
+**Prevention:**
+Docker COPY does not support `*` glob expansion in the destination path like shell globbing does. Always use explicit COPY lines for monorepo workspace packages.
+
+**Files Affected:**
+- apps/dashboard/Dockerfile
+
+**Date:** 2026-07-29
+**Status:** Active
+
+### Dashboard Dockerfile — Standalone Output Path Mismatch
+
+**Symptom:**
+Dashboard container starts but immediately exits with:
+```
+node:internal/modules/cjs/loader: MODULE_NOT_FOUND: Cannot find module '/app/server.js'
+```
+
+**Root Cause:**
+Next.js standalone output mode generates the server at `apps/dashboard/server.js` (matching the monorepo structure), but the CMD was `node server.js` (relative to WORKDIR /app).
+
+**Fix Applied:**
+Changed CMD to `node apps/dashboard/server.js`.
+
+**Prevention:**
+When Next.js `output: "standalone"` is used in a monorepo, the built server.js path preserves the monorepo directory structure. Check the output path in the final standalone `.next` directory.
+
+**Files Affected:**
+- apps/dashboard/Dockerfile
+
+**Date:** 2026-07-29
+**Status:** Active
+
+### Missing Meta Environment Variables in Docker Compose
+
+**Symptom:**
+API container crashes at startup after successful module resolution:
+```
+Configuration key "META_PHONE_NUMBER_ID" does not exist
+```
+
+**Root Cause:**
+The `MessagingModule` uses `ConfigService.getOrThrow<string>("META_PHONE_NUMBER_ID")` for the MetaApiClient factory. The `.env` file defines these vars, but `docker-compose.yml` was not passing them to the api service container.
+
+**Fix Applied:**
+Added all Meta environment variables to the api service's environment block in `docker-compose.yml`, with `${VAR:-placeholder}` defaults:
+- `META_PHONE_NUMBER_ID`, `META_ACCESS_TOKEN`, `META_APP_SECRET`, `META_APP_ID`, `META_WABA_ID`
+
+**Prevention:**
+All env vars used by NestJS `ConfigModule` must be explicitly declared in `docker-compose.yml` or loaded via `env_file`. Use `getOrThrow` sparingly — consider `get` with fallback for non-critical config.
+
+**Files Affected:**
+- docker-compose.yml
+
+**Date:** 2026-07-29
+**Status:** Active
+
+### Stale infrastructure/docker-compose.yml — References Missing Dockerfile
+
+**Symptom:**
+No explicit error (not actively used), but `infrastructure/docker-compose.yml` points to `apps/api/Dockerfile` which was moved to root `Dockerfile`. Building from this file would fail with `failed to solve: file not found`.
+
+**Root Cause:**
+During the R1 wa-manager rebase, the API Dockerfile was moved from `apps/api/Dockerfile` to the root `Dockerfile`, and the active docker-compose.yml was moved to the root directory. The stale copy in `infrastructure/` was never updated or deleted.
+
+**Fix Applied:**
+Deleted `infrastructure/docker-compose.yml` and the now-empty `infrastructure/` directory. Updated `SETUP.md` and `README.md` to use root `docker-compose.yml` instead.
+
+**Prevention:**
+When relocating build configuration files, always check for stale copies or aliases in related directories. After the move, `grep` for the old path across the repo.
+
+**Files Affected:**
+- infrastructure/docker-compose.yml — deleted
+- SETUP.md — replaced `docker compose -f infrastructure/docker-compose.yml` with `docker compose`
+- README.md — updated structure layout
+- ai-system/planning/task-queue.md — updated repo layout
+
+**Date:** 2026-07-29
 **Status:** Active
 
 ---

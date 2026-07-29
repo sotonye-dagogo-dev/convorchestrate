@@ -2,7 +2,7 @@
 
 > **Metadata**
 > - last-updated-by: update-ai-system
-> - last-verified-against-code: 2026-07-22
+> - last-verified-against-code: 2026-07-29
 > - staleness-policy: auto-regenerable — can be derived from import analysis tools. Manual content only for conventions and rules that cannot be inferred from code.
 
 > **Overview:** Maps how modules depend on each other. Agents use this to understand the impact of changes. This file is **auto-regenerable** — prefer tool-based import analysis for ground truth, and treat manual entries as supplementary.
@@ -57,6 +57,9 @@ packages/utils
 | @fastify/helmet | Security headers | apps/api |
 | @fastify/rate-limit | Rate limiting | apps/api |
 | @fastify/multipart | File upload handling | apps/api |
+| @fastify/busboy | Multipart parser (transitive dep of @fastify/multipart) | (root — hoisted) |
+| @lukeed/ms | Duration formatting (transitive dep of @fastify/rate-limit) | (root — hoisted) |
+| stream-wormhole | Stream piping helper (transitive dep of @fastify/multipart) | (root + nested in apps/api/node_modules) |
 | typeorm | ORM | apps/api |
 | pg | Postgres driver | apps/api |
 | ioredis | Redis client | apps/api |
